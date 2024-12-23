@@ -43,6 +43,7 @@ func main() {
 	router.HandleFunc("/job", handlers.CreateJobHandler(db)).Methods("POST")
 	router.HandleFunc("/job/{id}", handlers.GetJobHandler(db)).Methods("GET")
 	router.HandleFunc("/job/{id}", handlers.DeleteJobHandler(db)).Methods("DELETE")
+	router.HandleFunc("/job/{id}/run", handlers.RunJobHandler(db)).Methods("POST")
 
 	router.HandleFunc("/", GetAppHandler).Methods("GET")
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

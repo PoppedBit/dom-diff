@@ -24,12 +24,12 @@ Job
 </table>
 
 <h3>Runs</h3>
+<button hx-post="/job/{{.Job.Id}}/run">Start Run</button>
 {{template "runs-table" .Runs }}
 
 {{end}}
 
 {{define "runs-table"}}
-<button>Start Run</button>
 
 <table>
     <thead>
