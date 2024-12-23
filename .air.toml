@@ -1,6 +1,6 @@
 [build]
-exclude_dir = ["tmp"]
-exclude_file = ["README.md"]
+exclude_dir = ["tmp", "output"]
+exclude_file = ["README.md", "test.db"]
 
 [log]
 level = "debug"

@@ -24,3 +24,4 @@ go.work.sum
 #Poppedbit added
 tmp
 *.db
+output
