@@ -1,0 +1,23 @@
+{{define "createJobForm"}}
+<form id="create-job-form" hx-post="/job" hx-target="body">
+    <div class="field">
+        <label for="url">Url</label>
+        <input type="text" id="url" name="url" required>
+    </div>
+    <div class="field">
+        <label for="itemSelector">Item Selector</label>
+        <input type="text" id="itemSelector" name="itemSelector" required>
+    </div>
+    <div class="field">
+        <label for="textSelector">Text Selector</label>
+        <input type="text" id="textSelector" name="textSelector" required>
+    </div>
+    <div class="flex items-center justify-between">
+        <button type="submit">
+            Create
+            <img class="htmx-indicator" src="/static/spinner.svg" alt="Loading...">
+        </button>
+        <button type="button" class="danger" onclick="closeModal()">Close</button>
+    </div>
+</form>
+{{end}}

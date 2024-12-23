@@ -1,0 +1,40 @@
+{{define "title"}}
+Jobs
+{{end}}
+
+{{define "body"}}
+<h2 class="text-xl font-bold mb-4">Jobs</h2>
+
+<button id="create-job-button" hx-get="/job" hx-target="#modal-content" hx-trigger="click" >Create Job</button>
+
+{{template "jobs-table" .Jobs }}
+
+{{end}}
+
+{{define "jobs-table"}}
+
+<table>
+    <thead>
+        <tr>
+            <th>Url</th>
+            <th>Item Selector</th>
+            <th>Text Selector</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .}}
+        <tr>
+            <td>{{.Url}}</td>
+            <td>{{.ItemSelector}}</td>
+            <td>{{.TextSelector}}</td>
+        </tr>
+        {{end}}
+        {{if eq (len .) 0}}
+        <tr>
+            <td colspan="3" class="text-center">No jobs found</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+
+{{end}}
