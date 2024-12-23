@@ -1,6 +1,9 @@
 package models
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -20,5 +23,9 @@ func (j *Job) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (j *Job) BeforeDelete(tx *gorm.DB) (err error) {
 	tx.Exec("DELETE FROM runs WHERE job_id = ?", j.Id)
+
+	outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), j.Id.String())
+	os.RemoveAll(outputDir)
+
 	return nil
 }

@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 	"github.com/poppedbit/dom-diff/helpers"
@@ -79,6 +81,14 @@ func CreateJobHandler(db *gorm.DB) http.HandlerFunc {
 		db.Create(&cemetery)
 
 		id := cemetery.Id.String()
+
+		// Create {outputDir}/{id}
+		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), id)
+		err := os.MkdirAll(outputDir, os.ModePerm)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		// Redirect to cemeteries page
 		w.Header().Set("HX-Location", "/job/"+id)
