@@ -1,0 +1,52 @@
+{{define "title"}}
+Job
+{{end}}
+
+{{define "body"}}
+<h2 class="text-xl font-bold mb-4">Job</h2>
+
+<h3>Metadata</h3>
+<table>
+    <tbody>
+        <tr>
+            <td>Url</td>
+            <td>{{.Job.Url}}</td>
+        </tr>
+        <tr>
+            <td>Item Selector</td>
+            <td>{{.Job.ItemSelector}}</td>
+        </tr>
+        <tr>
+            <td>Text Selector</td>
+            <td>{{.Job.TextSelector}}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Runs</h3>
+{{template "runs-table" .Runs }}
+
+{{end}}
+
+{{define "runs-table"}}
+<button>Start Run</button>
+
+<table>
+    <thead>
+        <tr>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .}}
+        <tr>
+
+        </tr>
+        {{end}}
+        {{if eq (len .) 0}}
+        <tr>
+            <td colspan="3" class="text-center">No runs found</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{end}}

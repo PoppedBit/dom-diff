@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/poppedbit/dom-diff/helpers"
 	"github.com/poppedbit/dom-diff/models"
 	"gorm.io/gorm"
@@ -80,7 +81,60 @@ func CreateJobHandler(db *gorm.DB) http.HandlerFunc {
 		id := cemetery.Id.String()
 
 		// Redirect to cemeteries page
-		w.Header().Set("HX-Location", "/job/"+id+"/edit")
+		w.Header().Set("HX-Location", "/job/"+id)
 		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+func DeleteJobHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		id := params["id"]
+
+		var job models.Job
+		db.Where("id = ?", id).First(&job)
+		db.Delete(&job)
+
+		w.Header().Set("HX-Location", "/jobs")
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+type JobData struct {
+	helpers.BaseTemplateData
+	Job  models.Job
+	Runs []models.Run
+}
+
+func GetJobHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		id := params["id"]
+
+		var job models.Job
+		db.Where("id = ?", id).First(&job)
+
+		templates := []string{
+			"templates/job.html",
+		}
+
+		tmpl, err := helpers.ParseFullPage(templates...)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		data := JobData{
+			Job: job,
+		}
+		data.BaseTemplateData.Init(r)
+
+		err = tmpl.ExecuteTemplate(w, "base", data)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	}
 }

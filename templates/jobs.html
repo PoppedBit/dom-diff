@@ -19,6 +19,7 @@ Jobs
             <th>Url</th>
             <th>Item Selector</th>
             <th>Text Selector</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -27,6 +28,10 @@ Jobs
             <td>{{.Url}}</td>
             <td>{{.ItemSelector}}</td>
             <td>{{.TextSelector}}</td>
+            <td>
+                <a class="button" href="/job/{{.Id}}" >Edit</a>
+                <button class="danger" hx-delete="/job/{{.Id}}" hx-confirm="Are you sure?" hx-target="#modal-content" hx-trigger="click">Delete</button>
+            </td>
         </tr>
         {{end}}
         {{if eq (len .) 0}}
