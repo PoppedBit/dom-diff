@@ -10,7 +10,9 @@ Job
     <tbody>
         <tr>
             <td>Url</td>
-            <td>{{.Job.Url}}</td>
+            <td>
+                <a href="{{.Job.Url}}" target="_blank">{{.Job.Url}}</a>
+            </td>
         </tr>
         <tr>
             <td>Item Selector</td>
@@ -34,12 +36,20 @@ Job
 <table>
     <thead>
         <tr>
+            <th>Run Time</th>
+            <th>Matches</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {{range .}}
         <tr>
-
+            <td>{{.CreatedAt}}</td>
+            <td>{{.Matches}}</td>
+            <td>
+                <a class="button" href="/job/{{.Job.Id}}/run/{{.Id}}" >View</a>
+                <button class="danger" hx-delete="/job/{{.Job.Id}}/run/{{.Id}}" hx-confirm="Are you sure?" hx-target="#modal-content" hx-trigger="click">Delete</button>
+            </td>
         </tr>
         {{end}}
         {{if eq (len .) 0}}

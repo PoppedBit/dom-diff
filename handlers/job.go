@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -19,6 +21,21 @@ import (
 type JobsData struct {
 	helpers.BaseTemplateData
 	Jobs []models.Job
+}
+
+type JobData struct {
+	helpers.BaseTemplateData
+	Job  models.Job
+	Runs []models.Run
+}
+
+type Match struct {
+	Text string
+	HTML string
+}
+
+type RunData struct {
+	helpers.BaseTemplateData
 }
 
 func GetJobsHandler(db *gorm.DB) http.HandlerFunc {
@@ -108,15 +125,17 @@ func DeleteJobHandler(db *gorm.DB) http.HandlerFunc {
 		db.Where("id = ?", id).First(&job)
 		db.Delete(&job)
 
+		// Delete output/{id}
+		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), id)
+		err := os.RemoveAll(outputDir)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("HX-Location", "/jobs")
 		w.WriteHeader(http.StatusNoContent)
 	}
-}
-
-type JobData struct {
-	helpers.BaseTemplateData
-	Job  models.Job
-	Runs []models.Run
 }
 
 func GetJobHandler(db *gorm.DB) http.HandlerFunc {
@@ -128,7 +147,7 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		db.Where("id = ?", id).First(&job)
 
 		var runs []models.Run
-		db.Where("job_id = ?", id).Find(&runs)
+		db.Preload("Job").Where("job_id = ?", id).Find(&runs)
 
 		templates := []string{
 			"templates/job.html",
@@ -187,7 +206,7 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Save html to {outputDir}/response.html
-		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), runId)
+		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), run.JobId, runId)
 		err = os.MkdirAll(outputDir, os.ModePerm)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -208,15 +227,48 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 			log.Fatalf("Failed to parse HTML: %v", err)
 		}
 
+		matches := []Match{}
+
 		// Select elements with the class "example"
 		doc.Find(job.ItemSelector).Each(func(index int, container *goquery.Selection) {
+			// full html of element
+			html, err := container.Html()
+			if err != nil {
+				log.Fatalf("Failed to get HTML: %v", err)
+			}
+
 			// inside element, find job.TextSelector, and get the inner text
 			elements := container.Find(job.TextSelector)
 
-			elements.Each(func(index int, element *goquery.Selection) {
-				// text := element.Text()
-			})
+			element := elements.First()
+			text := element.Text()
+			println(text)
+
+			match := Match{
+				Text: text,
+				HTML: html,
+			}
+
+			matches = append(matches, match)
 		})
+
+		// Save matches to {outputDir}/matches.json
+		jsonMatches, err := json.MarshalIndent(matches, "", "  ")
+		if err != nil {
+			fmt.Println("Error encoding JSON:", err)
+			return
+		}
+
+		jsonFile := filepath.Join(outputDir, "matches.json")
+		println(jsonFile)
+		err = os.WriteFile(jsonFile, jsonMatches, os.ModePerm)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		run.Matches = len(matches)
+		db.Save(&run)
 
 		// Redirect to run page
 		w.Header().Set("HX-Location", "/job/"+id+"/run/"+runId)
