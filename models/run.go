@@ -1,6 +1,9 @@
 package models
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -8,7 +11,7 @@ import (
 type Run struct {
 	gorm.Model
 	Id      uuid.UUID `gorm:"type:char(36);primaryKey"`
-	JobId   string    `gorm:"type:char(36);not null"`
+	JobId   uuid.UUID `gorm:"type:char(36);not null"`
 	Job     Job       `gorm:"foreignKey:JobId"`
 	Matches int       `gorm:"type:integer;not null;default:0"`
 }
@@ -16,4 +19,10 @@ type Run struct {
 func (r *Run) BeforeCreate(tx *gorm.DB) (err error) {
 	r.Id = uuid.New()
 	return
+}
+
+func (r *Run) BeforeDelete(tx *gorm.DB) (err error) {
+	outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), r.JobId.String(), r.Id.String())
+	os.RemoveAll(outputDir)
+	return nil
 }

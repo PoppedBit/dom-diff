@@ -36,6 +36,8 @@ type Match struct {
 
 type RunData struct {
 	helpers.BaseTemplateData
+	Run     models.Run
+	Matches []Match
 }
 
 func GetJobsHandler(db *gorm.DB) http.HandlerFunc {
@@ -184,7 +186,7 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		db.Where("id = ?", id).First(&job)
 
 		run := models.Run{
-			JobId: id,
+			JobId: job.Id,
 		}
 
 		db.Create(&run)
@@ -206,7 +208,7 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Save html to {outputDir}/response.html
-		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), run.JobId, runId)
+		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), run.JobId.String(), runId)
 		err = os.MkdirAll(outputDir, os.ModePerm)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -273,5 +275,79 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		// Redirect to run page
 		w.Header().Set("HX-Location", "/job/"+id+"/run/"+runId)
 		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+func GetRunHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		// jobId := params["jobId"]
+		runId := params["runId"]
+
+		var run models.Run
+		db.Where("id = ?", runId).First(&run)
+
+		var matches []Match
+		// load matches from {outputDir}/{jobId}/{runId}/matches.json
+		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), run.JobId.String(), runId)
+		jsonFile := filepath.Join(outputDir, "matches.json")
+		jsonMatches, err := os.ReadFile(jsonFile)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = json.Unmarshal(jsonMatches, &matches)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		templates := []string{
+			"templates/run.html",
+		}
+
+		tmpl, err := helpers.ParseFullPage(templates...)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		data := RunData{
+			Run:     run,
+			Matches: matches,
+		}
+		data.BaseTemplateData.Init(r)
+
+		err = tmpl.ExecuteTemplate(w, "base", data)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func DeleteRunHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		jobId := params["jobId"]
+		runId := params["runId"]
+
+		var run models.Run
+		db.Where("id = ?", runId).First(&run)
+		db.Delete(&run)
+
+		// Delete output/{jobId}/{runId}
+		outputDir := filepath.Join(os.Getenv("OUTPUT_DIR"), jobId, runId)
+		err := os.RemoveAll(outputDir)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("HX-Location", "/job/"+jobId)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

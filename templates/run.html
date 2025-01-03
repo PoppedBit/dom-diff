@@ -1,0 +1,25 @@
+{{define "title"}}
+Run
+{{end}}
+
+{{define "body"}}
+<h2 class="text-xl font-bold mb-4">Run</h2>
+
+<h3>Job</h3>
+
+<h3>Metadata</h3>
+
+<h3>Matches</h3>
+
+<table>
+    <tbody>
+        {{range .Matches}}
+        <tr>
+            <td>{{.Text}}</td>
+            <td>{{.HTML}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+
+{{end}}
