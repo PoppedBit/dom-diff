@@ -6,12 +6,36 @@ Run
 <h2 class="text-xl font-bold mb-4">Run</h2>
 
 <h3>Job</h3>
+<table>
+    <tbody>
+        <tr>
+            <td>Url</td>
+            <td>
+                <a href="{{.Job.Url}}" target="_blank">{{.Job.Url}}</a>
+            </td>
+        </tr>
+        <tr>
+            <td>Item Selector</td>
+            <td>{{.Job.ItemSelector}}</td>
+        </tr>
+        <tr>
+            <td>Text Selector</td>
+            <td>{{.Job.TextSelector}}</td>
+        </tr>
+    </tbody>
+</table>
 
 <h3>Metadata</h3>
 
 <h3>Matches</h3>
 
 <table>
+    <thead>
+        <tr>
+            <th>Text</th>
+            <th>HTML</th>
+        </tr>
+    </thead>
     <tbody>
         {{range .Matches}}
         <tr>

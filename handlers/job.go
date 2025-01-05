@@ -36,6 +36,7 @@ type Match struct {
 
 type RunData struct {
 	helpers.BaseTemplateData
+	Job     models.Job
 	Run     models.Run
 	Matches []Match
 }
@@ -285,7 +286,9 @@ func GetRunHandler(db *gorm.DB) http.HandlerFunc {
 		runId := params["runId"]
 
 		var run models.Run
-		db.Where("id = ?", runId).First(&run)
+		db.Preload("Job").Where("id = ?", runId).First(&run)
+
+		job := run.Job
 
 		var matches []Match
 		// load matches from {outputDir}/{jobId}/{runId}/matches.json
@@ -315,6 +318,7 @@ func GetRunHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		data := RunData{
+			Job:     job,
 			Run:     run,
 			Matches: matches,
 		}
